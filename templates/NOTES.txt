@@ -1,0 +1,2 @@
+1. How to chek running:
+  go to github setting.

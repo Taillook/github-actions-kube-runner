@@ -1,0 +1,35 @@
+{{- range $i, $project := .Values.projects -}}
+{{- if ne $i 0 }}
+---
+{{- end }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ include "github-actions-kube-runner.fullname" $ }}0{{ $project.name }}"
+  labels:
+    {{- include "github-actions-kube-runner.labels" $ | nindent 4 }}
+spec:
+  replicas: {{ $.Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "github-actions-kube-runner.selectorLabels" $ | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "github-actions-kube-runner.selectorLabels" $ | nindent 8 }}
+    spec:
+      hostname: github-actions-kube-runner
+      containers:
+        - name: "{{ $.Chart.Name }}0{{ $project.name }}"
+          image: "{{ $.Values.image.imageName }}/{{ $project.name }}:{{ $.Values.image.tag | default $.Chart.AppVersion }}"
+          imagePullPolicy: {{ $.Values.image.pullPolicy }}
+          resources:
+            {{- toYaml $.Values.resources | nindent 12 }}
+          envFrom:
+            - secretRef:
+                name: secret
+          env:
+            - name: GH_REPOSITORY_NAME
+              value: {{ $project.reponame }}
+
+{{- end -}}
